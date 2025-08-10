@@ -1,7 +1,9 @@
 # Projet IA - Catégorisation des clients d'Amazing
 
 ## Présentation
-Ce projet vise à catégoriser les clients d'une marketplace (Amazing) selon leurs comportements d'achat et de navigation, à l'aide d'un pipeline ETL robuste et d'un pipeline IA basé sur le clustering non supervisé.
+Ce projet catégorise les clients d'une marketplace (Amazing) selon leurs comportements d'achat et de navigation, à l'aide d'un pipeline ETL et d'un pipeline IA (clustering non supervisé).
+
+Depuis la dernière mise à jour, le projet a été converti en structure Kedro pour améliorer la robustesse, la modularité et la reproductibilité.
 
 - **Données** : Fichiers d'événements utilisateurs (CSV volumineux)
 - **Objectif** : Identifier des groupes de clients pour adapter l'offre, le marketing et la personnalisation
@@ -11,59 +13,79 @@ Ce projet vise à catégoriser les clients d'une marketplace (Amazing) selon leu
 ```
 mspr2/
 │
-├── etl_steps/           # Scripts ETL (extraction, transformation, chargement)
-│     ├── extract.py
-│     ├── transform.py
-│     └── load.py
+├── mspr2_kedro/           # Projet Kedro (NOUVEAU)
+│   ├── conf/              # Config Kedro (catalog, params)
+│   ├── notebooks/
+│   ├── src/mspr2_kedro/
+│   │   ├── datasets/      # Datasets personnalisés (CSV, texte)
+│   │   ├── etl_steps/     # Utilitaires ETL (extract, transform, load)
+│   │   └── pipelines/
+│   │       ├── etl/       # Pipeline ETL (nodes + pipeline)
+│   │       └── modeling/  # Pipeline IA (preprocess, PCA, clustering, analyse)
+│   └── pyproject.toml
 │
-├── model_ia_steps/      # Scripts IA (exploration, PCA, clustering, analyse)
-│     ├── step1_load_explore.py
-│     ├── step2_preprocess.py
-│     ├── step3_pca.py
-│     ├── step4_clustering.py
-│     └── step5_analyse_clusters.py
+├── datasets/              # Fichiers CSV bruts (non versionnés)
+├── output/                # Sorties ETL (features) (non versionnées)
+├── model_ia_steps/        # Sorties IA (normalisation, PCA, clustering, rapports) (non versionnées)
+├── extracted_csv/         # (optionnel) fichiers extraits (non versionnés)
+├── exploration_results/   # Rapports d'exploration (non versionnés)
 │
-├── datasets/            # Fichiers CSV bruts
-├── output/              # Données utilisateurs agrégées (features)
-├── exploration_results/ # Rapports d'exploration des CSV bruts
-│
-├── main_all.py          # Orchestration complète (ETL + IA)
-├── main_etl.py          # Pipeline ETL seul
-├── main_model.py        # Pipeline IA seul
-│
-└── requirements.txt     # Dépendances Python
+├── exploration_csv.py     # Script d'exploration rapide des CSV bruts (legacy)
+├── main_etl.py            # Legacy (remplacé par Kedro)
+├── main_model.py          # Legacy (remplacé par Kedro)
+├── main_all.py            # Legacy (remplacé par Kedro)
+└── requirements.txt       # Dépendances legacy (pré-Kedro)
 ```
 
 ## Prérequis
 - Python 3.10 ou 3.11 recommandé
-- Installer les dépendances :
-  ```bash
-  pip install -r requirements.txt
-  ```
+- Installer Kedro et les dépendances du projet Kedro:
+  - Kedro: `pip install --user "kedro==0.19.*"`
+  - Dépendances: `pip install -r mspr2_kedro/requirements.txt`
+  - Si `kedro` n'est pas dans le PATH: utiliser `~/.local/bin/kedro`
+
 - Placer les fichiers de données CSV dans le dossier `datasets/`
 
-## Exécution du projet
+## Exécution avec Kedro (recommandé)
+Se placer dans le dossier du projet Kedro:
 
-### 1. Pipeline complet (ETL + IA)
 ```bash
+cd mspr2_kedro
+# Pipeline complet (ETL + IA)
+kedro run
+# ou (si kedro n'est pas dans PATH)
+~/.local/bin/kedro run
+```
+
+- Sorties générées:
+  - ETL: `output/features_all_users.csv`
+  - IA: `model_ia_steps/features_normalized.csv`, `model_ia_steps/features_pca.csv`, `model_ia_steps/features_clusters.csv`, `model_ia_steps/clusters_analysis_report.txt`
+
+Exécuter seulement une partie du pipeline:
+```bash
+# ETL seulement
+kedro run --pipeline etl
+# IA seulement (à partir des features déjà présentes)
+kedro run --pipeline modeling
+```
+
+Paramètres clés (configurables dans `mspr2_kedro/conf/base/parameters.yml`):
+- `datasets_dir`: chemin des CSV bruts (par défaut `datasets/`)
+- `etl_chunk_size`: taille des chunks de lecture CSV
+- `pca_variance_threshold`: variance expliquée cible pour la PCA
+- `min_k`, `max_k`: plage de recherche du nombre de clusters
+
+## Exécution legacy (déconseillé, pour compatibilité)
+Ces scripts sont conservés à titre transitoire. Préférez Kedro.
+
+```bash
+# Pipeline complet (ETL + IA)
 python main_all.py
-```
-- Extrait, nettoie, agrège les données utilisateurs
-- Catégorise les clients par clustering
-- Génère tous les rapports et graphiques dans `output/` et `model_ia_steps/`
-
-### 2. Pipeline ETL seul
-```bash
+# Pipeline ETL seul
 python main_etl.py
-```
-- Produit le fichier `output/features_all_users.csv` à partir des CSV bruts
-
-### 3. Pipeline IA seul
-```bash
+# Pipeline IA seul
 python main_model.py
 ```
-- À utiliser si les features utilisateurs sont déjà générées
-- Produit les clusters, rapports et visualisations dans `model_ia_steps/`
 
 ## Détail des étapes IA
 1. **Exploration** : Statistiques, valeurs manquantes, outliers
@@ -71,12 +93,6 @@ python main_model.py
 3. **PCA** : Réduction de dimensionnalité, visualisation
 4. **Clustering** : K-Means, choix du nombre de groupes (coude, silhouette)
 5. **Analyse** : Description, nommage et rapport sur chaque cluster
-
-## Conseils pour l'analyse et la soutenance
-- Justifiez chaque choix (features, seuils, algorithmes)
-- Interprétez les groupes trouvés (profils-types, recommandations métier)
-- Mettez en avant la robustesse, la reproductibilité et le respect du RGPD
-- Utilisez les graphiques générés pour illustrer vos propos
 
 ## Respect du RGPD
 - Les données sont anonymisées (`user_id` non nominatif)
