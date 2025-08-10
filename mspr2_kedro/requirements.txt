@@ -1,0 +1,10 @@
+ipython>=8.10
+jupyterlab>=3.0
+kedro~=0.19.13
+notebook
+pandas>=1.5
+numpy>=1.23
+scikit-learn>=1.2
+matplotlib>=3.6
+sqlalchemy>=1.4
+psycopg2-binary>=2.9
