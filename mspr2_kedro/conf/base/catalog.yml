@@ -5,28 +5,28 @@ features_all_users_memory:
 
 features_all_users:
   type: mspr2_kedro.datasets.simple.CSVDataset
-  filepath: /workspace/output/features_all_users.csv
+  filepath: ../output/features_all_users.csv
   save_args:
     index: false
 
 features_normalized:
   type: mspr2_kedro.datasets.simple.CSVDataset
-  filepath: /workspace/model_ia_steps/features_normalized.csv
+  filepath: ../model_ia_steps/features_normalized.csv
   save_args:
     index: false
 
 features_pca:
   type: mspr2_kedro.datasets.simple.CSVDataset
-  filepath: /workspace/model_ia_steps/features_pca.csv
+  filepath: ../model_ia_steps/features_pca.csv
   save_args:
     index: false
 
 features_clusters:
   type: mspr2_kedro.datasets.simple.CSVDataset
-  filepath: /workspace/model_ia_steps/features_clusters.csv
+  filepath: ../model_ia_steps/features_clusters.csv
   save_args:
     index: false
 
 clusters_analysis_report:
   type: mspr2_kedro.datasets.simple.TextDataset
-  filepath: /workspace/model_ia_steps/clusters_analysis_report.txt
+  filepath: ../model_ia_steps/clusters_analysis_report.txt
