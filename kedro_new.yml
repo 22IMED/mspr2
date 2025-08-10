@@ -1,0 +1,4 @@
+project_name: Amazing Customers
+repo_name: mspr2_kedro
+python_package: mspr2_kedro
+kedro_version: 0.19.13

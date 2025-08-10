@@ -1,0 +1,5 @@
+datasets_dir: /workspace/datasets
+etl_chunk_size: 100000
+pca_variance_threshold: 0.9
+min_k: 2
+max_k: 10
